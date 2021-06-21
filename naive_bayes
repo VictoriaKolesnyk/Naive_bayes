@@ -1,0 +1,88 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import sklearn.naive_bayes as sk_naive_bayes
+from sklearn.naive_bayes import GaussianNB
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from scipy.stats import kurtosis
+from scipy.stats import skew
+import warnings
+warnings.filterwarnings("ignore")
+
+
+#load iris dataset
+df = pd.read_csv('https://raw.githubusercontent.com/AndriiLatysh/ml_5/master/data/iris.csv')
+df.head()
+
+#basic statistical metrics
+
+def basic_research(df=df, column = "volume"):
+    print("Базові метрики")
+    print(df[column].describe())
+    print("------------------------------------")
+    
+    print("5 популярних значень")
+    print(df[column].value_counts().nlargest(5))
+    print("------------------------------------")
+    
+    print("Эксцес ", kurtosis(df[column]))
+    print("Асиметрія ", skew(df[column]))
+    
+    sns.distplot(df[column])
+    
+basic_research(column = 'sepal-length')
+basic_research(column = 'sepal-width')
+basic_research(column = 'petal-length')
+basic_research(column = 'petal-width')
+
+#correlations
+corr=df.corr()
+sns.heatmap(corr, annot=True,cmap='Blues')
+plt.show()
+
+
+column_names=df.columns.tolist()
+column_names
+
+X = df[column_names[:-1]]
+y = df[column_names[-1]]
+
+#split on train test data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# data standardization
+from sklearn.preprocessing import StandardScaler
+sk =StandardScaler() 
+X_train = sk.fit_transform(X_train)
+X_test = sk.transform(X_test)
+
+#model
+import sklearn.naive_bayes as sk_naive_bayes
+from sklearn.naive_bayes import GaussianNB
+
+model = GaussianNB()
+model.fit(X_train,y_train)
+
+#prediction
+y_pred = model.predict(X_test)
+y_pred
+
+#comparison of values
+y_compare = np.vstack((y_test,y_pred)).T
+y_compare[:5,:]
+
+#metrics
+import sklearn.metrics as sk_metrics
+confusion_matrix = sk_metrics.confusion_matrix(y_test,y_pred)
+print(confusion_matrix)
+
+print(f'всього тестових значень {X_test.shape[0]} з них невірно передбачених  {(y_test != y_pred).sum()}')
+
+# accuracy = 28/30
+# accuracy
+
+from sklearn import metrics
+print(metrics.classification_report(y_test,y_pred))
+
+
